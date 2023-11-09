@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs";
 import sharp from "sharp";
+import AdmZip from "adm-zip";
 
 // Purpose:
 // Image down scaler.
@@ -12,11 +13,24 @@ import sharp from "sharp";
 //3. Process (Downsizing image)
 //4. Send back to client(Not used in this part)
 
-let imgPath="./ziqzi.jpg";
+//Additional Steps (If ZIP is used)
+
+let originalZipPath = "./photo.zip";
+let tempUnzipPath = "./temp";
+let zip = new AdmZip(originalZipPath);
+zip.extractAllTo(tempUnzipPath, true);
+fs.readdir(tempUnzipPath, async (err,fileNames) => {
+    if (err) throw err;
+
+    fs.mkdirSync(tempUnzipPath + "/after/")
+    for (let i = 0; i < fileNames.length; i++) {
+        const fName = fileNames[i];
+        
+        let imgPath= tempUnzipPath + "/" + fName;
+        console.log(imgPath);
 if (fs.existsSync(imgPath) == true) {
-    console.log("Image exists in user's files.")
     
-    if (path.extname(imgPath) == ".jpg") {
+    if (path.extname(imgPath) == ".jpg" || path.extname(imgPath) == ".JPG") {
         console.log("Verified Image File");
         sharp(imgPath).metadata().then((meta) =>{
             const width = meta.width!;
@@ -24,7 +38,13 @@ if (fs.existsSync(imgPath) == true) {
             sharp(imgPath)
                 .resize(Math.round(width / 2), Math.round(height / 2))
                 .jpeg({ quality: 50 })
-                .toFile(".fixed.jpg");
+                .toFile(tempUnzipPath + "/after/" +  fName);
         });
     }
 }
+    }
+
+
+});
+
+
